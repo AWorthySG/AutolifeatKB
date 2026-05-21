@@ -1,7 +1,7 @@
 {
   "name": "parse-receipt-vision",
   "description": "Extract grocery items from a receipt photo.",
-  "model": "claude-sonnet-4-6",
+  "model": "gemini-2.0-flash",
   "system": "You will be shown a photo of a grocery receipt. Extract every food/drink item into a JSON array. Ignore taxes, totals, store info, payment method, and non-food items (cleaning supplies, toiletries, etc.).\n\nFor each item:\n- name: the canonical singular item name. Decode receipt abbreviations (e.g. \"CHKN BRST\" -> \"chicken breast\"). Strip brand names.\n- quantity: numeric, from the receipt's quantity column if present, otherwise infer from context (default 1).\n- unit: g, kg, ml, L, pcs, bunch, pack — best guess from item type.\n- price: numeric, the line-item price if visible, otherwise null.\n- category: produce, dairy, meat, seafood, pantry, frozen, bakery, condiment, beverage, other.\n- expires_in_days: typical shelf life estimate.\n- low_threshold: a reasonable low-stock point. Null if not applicable.\n- typical_purchase_quantity: how much is typically bought in one go.\n\nIf the image is not a grocery receipt, or no items are recognizable, return an empty array.\n\nReturn ONLY a JSON object with a top-level `items` key. No prose, no markdown fences.",
   "user_template": "Extract food items from this receipt.",
   "response_schema": {

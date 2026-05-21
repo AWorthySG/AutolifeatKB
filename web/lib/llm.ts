@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { z } from "zod";
 import parseAddText from "./prompts/parse-add-text.json";
 import parseReceiptVision from "./prompts/parse-receipt-vision.json";
@@ -6,7 +6,14 @@ import parseFridgeVision from "./prompts/parse-fridge-vision.json";
 import parseCookText from "./prompts/parse-cook-text.json";
 import suggestDish from "./prompts/suggest-dish.json";
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+
+let cachedClient: GoogleGenerativeAI | null = null;
+function getClient(): GoogleGenerativeAI {
+  if (!apiKey) throw new Error("GOOGLE_GENERATIVE_AI_API_KEY is not set");
+  if (!cachedClient) cachedClient = new GoogleGenerativeAI(apiKey);
+  return cachedClient;
+}
 
 interface PromptDefinition {
   name: string;
@@ -52,18 +59,18 @@ export async function runTextPrompt<TSchema extends z.ZodTypeAny>(
   const userMessage = fillTemplate(prompt.user_template, vars);
 
   const attempt = async (extraSystem?: string): Promise<z.infer<TSchema>> => {
-    const response = await client.messages.create({
+    const model = getClient().getGenerativeModel({
       model: prompt.model,
-      max_tokens: 2048,
-      system: extraSystem ? `${prompt.system}\n\n${extraSystem}` : prompt.system,
-      messages: [{ role: "user", content: userMessage }],
+      systemInstruction: extraSystem ? `${prompt.system}\n\n${extraSystem}` : prompt.system,
+      generationConfig: {
+        responseMimeType: "application/json",
+        temperature: 0.2,
+      },
     });
 
-    const textBlock = response.content.find((b) => b.type === "text");
-    if (!textBlock || textBlock.type !== "text") {
-      throw new Error("LLM returned no text content");
-    }
-    return schema.parse(extractJson(textBlock.text));
+    const result = await model.generateContent(userMessage);
+    const text = result.response.text();
+    return schema.parse(extractJson(text));
   };
 
   try {
@@ -84,26 +91,27 @@ export async function runVisionPrompt<TSchema extends z.ZodTypeAny>(
 ): Promise<z.infer<TSchema>> {
   const prompt = loadPrompt(promptName);
 
-  const response = await client.messages.create({
+  const model = getClient().getGenerativeModel({
     model: prompt.model,
-    max_tokens: 2048,
-    system: prompt.system,
-    messages: [
-      {
-        role: "user",
-        content: [
-          { type: "image", source: { type: "base64", media_type: imageMediaType, data: imageBase64 } },
-          { type: "text", text: prompt.user_template },
-        ],
-      },
-    ],
+    systemInstruction: prompt.system,
+    generationConfig: {
+      responseMimeType: "application/json",
+      temperature: 0.2,
+    },
   });
 
-  const textBlock = response.content.find((b) => b.type === "text");
-  if (!textBlock || textBlock.type !== "text") {
-    throw new Error("LLM returned no text content");
-  }
-  return schema.parse(extractJson(textBlock.text));
+  const result = await model.generateContent([
+    prompt.user_template,
+    {
+      inlineData: {
+        data: imageBase64,
+        mimeType: imageMediaType,
+      },
+    },
+  ]);
+
+  const text = result.response.text();
+  return schema.parse(extractJson(text));
 }
 
 // Keep these schemas in sync with prompts/*.json response_schema fields.

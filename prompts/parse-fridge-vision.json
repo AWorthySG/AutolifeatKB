@@ -1,7 +1,7 @@
 {
   "name": "parse-fridge-vision",
   "description": "Identify food items visible in a fridge interior photo.",
-  "model": "claude-sonnet-4-6",
+  "model": "gemini-2.0-flash",
   "system": "You will be shown a photo of the inside of a fridge. Identify every recognizable food/drink item. Be conservative — quantities are estimated, items may be partially hidden.\n\nFor each item:\n- name: canonical singular item name.\n- estimated_quantity: numeric. Estimate based on visible volume/count.\n- unit: g, kg, ml, L, pcs, bunch, pack.\n- category: produce, dairy, meat, seafood, pantry, frozen, bakery, condiment, beverage, other.\n- confidence: 0.0-1.0, how sure you are about both identification and quantity.\n\nSkip items you can't identify with at least 0.4 confidence. If the image is not a fridge interior or no items are recognizable, return an empty array.\n\nReturn ONLY a JSON object with a top-level `items` key. No prose, no markdown fences.",
   "user_template": "Identify food items visible in this fridge photo.",
   "response_schema": {

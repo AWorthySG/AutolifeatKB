@@ -6,7 +6,7 @@ A shared fridge inventory tracker. Add groceries by typing or photographing rece
 
 - **Web**: Next.js 15 (App Router) + TypeScript + Tailwind + shadcn/ui
 - **Backend**: Supabase (Postgres + Auth + Storage)
-- **LLM**: Anthropic Claude (`claude-haiku-4-5` for text, `claude-sonnet-4-6` for vision)
+- **LLM**: Google Gemini (`gemini-2.0-flash` — free tier covers personal use)
 - **Bot**: Python + `python-telegram-bot` (Phase 6)
 - **Hosting**: Vercel (web) + Fly.io (bot)
 
@@ -28,9 +28,9 @@ A shared fridge inventory tracker. Add groceries by typing or photographing rece
 3. Enable Email auth (magic link) under Authentication > Providers
 4. Copy your project URL, anon key, and service-role key
 
-### 2. Anthropic API key
+### 2. Google Gemini API key
 
-Get one at https://console.anthropic.com
+Get one for free at https://aistudio.google.com/apikey. The free tier (1500 requests/day on `gemini-2.0-flash`) is far more than this app needs.
 
 ### 3. Web app
 
