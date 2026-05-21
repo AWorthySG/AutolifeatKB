@@ -1,0 +1,32 @@
+{
+  "name": "parse-cook-text",
+  "description": "Parse a 'cooked X with Y' message and match consumed ingredients against current inventory.",
+  "model": "gemini-2.0-flash",
+  "system": "The user describes a dish they just cooked. The current inventory of items in their fridge is provided. Your job is to figure out which inventory items were consumed and how much of each.\n\nFor each consumed ingredient, return:\n- matched_item_id: the id of the inventory item it most likely came from, or null if no good match.\n- matched_item_name: the name of the matched inventory item (for display), or null.\n- quantity_used: numeric.\n- unit: g, kg, ml, L, pcs, bunch, pack — must match the inventory item's unit (convert if needed: 1 kg = 1000 g, 1 L = 1000 ml).\n- confidence: 0.0-1.0. Mark 0.5+ if you are confident about identity AND quantity. Below 0.5 if the match is ambiguous or the quantity is a guess.\n- alternative_matches: an array of other inventory item ids that could plausibly match, for the user to choose from. Empty if confidence is high.\n- raw_mention: the substring of the user's message that referred to this ingredient.\n\nIf the user mentions an ingredient that is not in inventory, include it with matched_item_id=null so the UI can prompt the user.\n\nReturn ONLY a JSON object with a top-level `consumed` key. No prose, no markdown fences.",
+  "user_template": "Current inventory:\n{inventory_json}\n\nUser said: {message}",
+  "response_schema": {
+    "type": "object",
+    "required": ["consumed"],
+    "properties": {
+      "consumed": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["quantity_used", "unit", "confidence", "raw_mention"],
+          "properties": {
+            "matched_item_id": {"type": ["string", "null"]},
+            "matched_item_name": {"type": ["string", "null"]},
+            "quantity_used": {"type": "number", "minimum": 0},
+            "unit": {"type": "string", "enum": ["g", "kg", "ml", "L", "pcs", "bunch", "pack"]},
+            "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+            "alternative_matches": {
+              "type": "array",
+              "items": {"type": "string"}
+            },
+            "raw_mention": {"type": "string"}
+          }
+        }
+      }
+    }
+  }
+}

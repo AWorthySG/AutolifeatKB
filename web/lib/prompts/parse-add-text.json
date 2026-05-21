@@ -1,0 +1,29 @@
+{
+  "name": "parse-add-text",
+  "description": "Parse a free-text grocery message into structured items.",
+  "model": "gemini-2.0-flash",
+  "system": "You are a fridge inventory assistant. The user sends a message describing groceries they just bought or food they want to add to the fridge. Parse it into a JSON array of items.\n\nFor each item, infer:\n- name: the canonical singular item name (e.g. \"chicken thigh\", \"milk\", \"egg\"). Strip brand names.\n- quantity: numeric. Resolve vague quantities to numbers: \"a few\" = 3, \"some\" = 1, \"a dozen\" = 12, \"half a\" = 0.5, \"a couple\" = 2.\n- unit: one of g, kg, ml, L, pcs, bunch, pack. Use pcs for countable items (eggs, apples), g/kg for meat/produce by weight, ml/L for liquids.\n- category: one of produce, dairy, meat, seafood, pantry, frozen, bakery, condiment, beverage, other.\n- expires_in_days: a typical shelf-life estimate from purchase day (e.g. milk=7, eggs=21, chicken=3, onion=30, rice=730).\n- low_threshold: a reasonable point at which to add to shopping list (e.g. milk=0.5 in L, eggs=4 in pcs). Null if not applicable.\n- typical_purchase_quantity: how much is typically bought in one go (e.g. milk=2 in L, eggs=12 in pcs).\n\nIf the user's message contains no recognizable food items, return an empty array.\n\nReturn ONLY a JSON object with a top-level `items` key. No prose, no markdown fences.",
+  "user_template": "{message}",
+  "response_schema": {
+    "type": "object",
+    "required": ["items"],
+    "properties": {
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["name", "quantity", "unit", "category", "expires_in_days", "typical_purchase_quantity"],
+          "properties": {
+            "name": {"type": "string"},
+            "quantity": {"type": "number"},
+            "unit": {"type": "string", "enum": ["g", "kg", "ml", "L", "pcs", "bunch", "pack"]},
+            "category": {"type": "string", "enum": ["produce", "dairy", "meat", "seafood", "pantry", "frozen", "bakery", "condiment", "beverage", "other"]},
+            "expires_in_days": {"type": "integer", "minimum": 0},
+            "low_threshold": {"type": ["number", "null"]},
+            "typical_purchase_quantity": {"type": "number"}
+          }
+        }
+      }
+    }
+  }
+}
