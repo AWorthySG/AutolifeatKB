@@ -1,0 +1,29 @@
+{
+  "name": "suggest-dish",
+  "description": "Suggest dishes that can be cooked with the current inventory.",
+  "model": "claude-haiku-4-5",
+  "system": "Given a list of items currently in the fridge/pantry, suggest 3 dishes the user could realistically cook. Prefer dishes that use items expiring soon. Be culturally varied.\n\nFor each suggestion:\n- name: the dish name.\n- ingredients_used: array of inventory item names this dish would consume.\n- missing: array of ingredients NOT in inventory that the user would need to buy (be honest — don't pretend everything is available).\n- estimated_servings: integer, default 2.\n- difficulty: \"easy\" | \"medium\" | \"hard\".\n\nReturn ONLY a JSON object with a top-level `suggestions` key. No prose, no markdown fences.",
+  "user_template": "Current inventory:\n{inventory_json}\n\nSuggest 3 dishes.",
+  "response_schema": {
+    "type": "object",
+    "required": ["suggestions"],
+    "properties": {
+      "suggestions": {
+        "type": "array",
+        "minItems": 1,
+        "maxItems": 3,
+        "items": {
+          "type": "object",
+          "required": ["name", "ingredients_used", "missing", "estimated_servings", "difficulty"],
+          "properties": {
+            "name": {"type": "string"},
+            "ingredients_used": {"type": "array", "items": {"type": "string"}},
+            "missing": {"type": "array", "items": {"type": "string"}},
+            "estimated_servings": {"type": "integer", "minimum": 1},
+            "difficulty": {"type": "string", "enum": ["easy", "medium", "hard"]}
+          }
+        }
+      }
+    }
+  }
+}
